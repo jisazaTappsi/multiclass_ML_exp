@@ -3,6 +3,8 @@ from pandas import *
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
+import colorsys
+import math
 
 num_x = 2
 num_y = 2
@@ -32,43 +34,39 @@ def plot_all(w_rules, w_learned, data_df):
     (x1_line_learned0, x2_line_learned0) = get_plot_data(w_learned[0], data_df)
     (x1_line_learned1, x2_line_learned1) = get_plot_data(w_learned[1], data_df)
 
-    filter0 = data_df[(data_df.y1 == 1)]
-    filter00 = data_df[(data_df.y1 == 0)]
-
-    filter1 = filter0[(data_df.y2 == 1)]
-    filter2 = filter0[(data_df.y2 == 0)]
-
-    filter3 = filter00[(data_df.y2 == 1)]
-    filter4 = filter00[(data_df.y2 == 0)]
-
-
-
-    '''
-    filter1 = data_df.ix[(data_df['y1'] == 1) & (data_df['y2'] == 1)]
-    filter2 = data_df[(data_df.y1 == 0 and data_df.y2 == 1)]
-    filter3 = data_df[(data_df.y1 == 1 and data_df.y2 == 0)]
-    filter4 = data_df[(data_df.y1 == 0 and data_df.y2 == 0)]
-    '''
-
     plt.plot(x1_line_rule0, x2_line_rule0, 'k-',
              x1_line_rule1, x2_line_rule1, 'k-',
              x1_line_learned0, x2_line_learned0, 'r-',
-             x1_line_learned1, x2_line_learned1, 'r-',
-             filter1['x1'], filter1['x2'], 'bs',
-             filter2['x1'], filter2['x2'], 'ro',
-             filter3['x1'], filter3['x2'], 'cs',
-             filter4['x1'], filter4['x2'], 'mo',)
+             x1_line_learned1, x2_line_learned1, 'r-')
+
+    n = int(math.pow(2, 2))
+
+    for i in range(n):
+        binary_string = bin(i).replace('0b', '')
+
+        condition = True
+        for index, name in enumerate(get_feature_names('y', num_y)):
+
+            if len(binary_string) < index:
+                value = binary_string[len(binary_string) - index-1]
+            else:
+                value = 0
+
+            condition &= (data_df[name] == int(value))
+
+        my_filter = data_df[condition]
+        plt.plot(my_filter['x1'], my_filter['x2'], 's', color=colorsys.hsv_to_rgb(*(i*1.0/n, 0.8, 0.8)))
+
     plt.show()
 
 
-# execute rule to decide label.
-def get_row_labels(row, w=get_w_rules()):
-    return Series({'y1': (np.dot(row, w[0]) > 1) * 1, 'y2': (np.dot(row, w[1]) > 1) * 1})
+# returns dictionary containing a matrix with ones or zeros
+def get_labels(x, w=get_w_rules()):
 
-
-# execute rule to decide label.
-def get_labels(x_matrix, w=get_w_rules()):
-    return DataFrame({'y1': (np.dot(x_matrix, w[0]) > 1) * 1, 'y2': (np.dot(x_matrix, w[1]) > 1) * 1})
+    d = {}
+    for index, name in enumerate(get_feature_names('y', num_y)):
+        d[name] = (np.dot(x, w[index]) > 1) * 1
+    return d
 
 
 # automatic feature generation names, i.e. x1, x2... or y1, y2...
@@ -98,7 +96,7 @@ def generate_toy_data(num_x):
 
     # get the x features
     df = DataFrame(np.random.randn(num_examples, num_x), columns=get_feature_names('x', num_x))
-    df = concat([df, df.apply(lambda row: get_row_labels([row['x1'], row['x2']]), axis=1)], axis=1)
+    df = concat([df, df.apply(lambda row: Series(get_labels(row)), axis=1)], axis=1)
 
     return df
 
@@ -109,12 +107,13 @@ def train_perceptron(the_training_data, learning_rate):
     w = np.random.randn(num_x, num_y)*2  # init weights
 
     for i in range(10):
-        for index, row in the_training_data.iterrows():
+        for idx1, row in the_training_data.iterrows():
             x_row = remove_feature('y', row)
             y_row = remove_feature('x', row)
-            y_prediction = get_row_labels(row=x_row, w=w)
-            w[0] += learning_rate * (y_row['y1']-y_prediction['y1']) * x_row
-            w[1] += learning_rate * (y_row['y2']-y_prediction['y2']) * x_row
+            y_prediction = Series(get_labels(x=x_row, w=w))
+
+            for idx2, name in enumerate(get_feature_names('y', num_y)):
+                w[idx2] += learning_rate * (y_row[name] - y_prediction[name]) * x_row
 
     return w
 
@@ -128,14 +127,12 @@ def get_error(labels, prediction):
 train_data = generate_toy_data(num_x)
 
 w_learned = train_perceptron(train_data, .5)
+
+prediction = DataFrame(get_labels(x=train_data.as_matrix(columns=get_feature_names('x', num_x))
+                                  , w=w_learned))
 train_error = get_error(labels=train_data.loc[:, get_feature_names('y', num_y)],
-                        prediction=get_labels(x_matrix=train_data.as_matrix(columns=get_feature_names('x', num_x))
-                                              , w=w_learned))
+                        prediction=prediction)
 
 
 print("Train error is = " + str(train_error))
 plot_all(w_rules, w_learned, train_data)
-
-
-
-
