@@ -7,10 +7,25 @@ import colorsys
 import math
 
 num_x = 2
-num_y = 2
-num_examples = 100
+num_y = 3
+num_examples = 200
+
+
+# automatic feature generation names, i.e. x1, x2... or y1, y2...
+def get_feature_names(first_char, num):
+
+    x_names = []
+    for i in range(1, num + 1):
+        x_names.append(first_char + str(i))
+
+    return x_names
+
 
 # nested array  where each element is a weight vector.
+#w_rules = {}
+#for name in get_feature_names('y', num_y):
+#    w_rules[name] = np.random.randn(num_x, 1)*2
+
 w_rules = np.random.randn(num_x, num_y)*2
 
 
@@ -28,18 +43,26 @@ def get_plot_data(w, df):
 
 def plot_all(w_rules, w_learned, data_df):
 
-    (x1_line_rule0, x2_line_rule0) = get_plot_data(w_rules[0], data_df)
-    (x1_line_rule1, x2_line_rule1) = get_plot_data(w_rules[1], data_df)
+    #for i in :
 
-    (x1_line_learned0, x2_line_learned0) = get_plot_data(w_learned[0], data_df)
-    (x1_line_learned1, x2_line_learned1) = get_plot_data(w_learned[1], data_df)
+
+    (x1_line_rule0, x2_line_rule0) = get_plot_data(w_rules[:, 0], data_df)
+    (x1_line_rule1, x2_line_rule1) = get_plot_data(w_rules[:, 1], data_df)
+    (x1_line_rule2, x2_line_rule2) = get_plot_data(w_rules[:, 2], data_df)
+
+    (x1_line_learned0, x2_line_learned0) = get_plot_data(w_learned[:, 0], data_df)
+    (x1_line_learned1, x2_line_learned1) = get_plot_data(w_learned[:, 1], data_df)
+    (x1_line_learned2, x2_line_learned2) = get_plot_data(w_learned[:, 2], data_df)
 
     plt.plot(x1_line_rule0, x2_line_rule0, 'k-',
              x1_line_rule1, x2_line_rule1, 'k-',
+             x1_line_rule2, x2_line_rule2, 'k-',
              x1_line_learned0, x2_line_learned0, 'r-',
-             x1_line_learned1, x2_line_learned1, 'r-')
+             x1_line_learned1, x2_line_learned1, 'r-',
+             x1_line_learned2, x2_line_learned2, 'r-'
+             )
 
-    n = int(math.pow(2, 2))
+    n = int(math.pow(2, num_y))
 
     for i in range(n):
         binary_string = bin(i).replace('0b', '')
@@ -65,18 +88,8 @@ def get_labels(x, w=get_w_rules()):
 
     d = {}
     for index, name in enumerate(get_feature_names('y', num_y)):
-        d[name] = (np.dot(x, w[index]) > 1) * 1
+        d[name] = (np.dot(x, w[:, index]) > 1) * 1
     return d
-
-
-# automatic feature generation names, i.e. x1, x2... or y1, y2...
-def get_feature_names(first_char, num):
-
-    x_names = []
-    for i in range(1, num + 1):
-        x_names.append(first_char + str(i))
-
-    return x_names
 
 
 # will remove all features starting with first_char, i.e. x1, x2... or y1, y2...
@@ -106,15 +119,20 @@ def train_perceptron(the_training_data, learning_rate):
 
     w = np.random.randn(num_x, num_y)*2  # init weights
 
+    #w = {}
+    #for name in get_feature_names('y', num_y):
+    #    w[name] = np.random.randn(num_x, 1)*2
+
     for i in range(10):
         for idx1, row in the_training_data.iterrows():
+            #x_row = remove_feature('y', row).tolist()
             x_row = remove_feature('y', row)
             y_row = remove_feature('x', row)
             y_prediction = Series(get_labels(x=x_row, w=w))
 
             for idx2, name in enumerate(get_feature_names('y', num_y)):
-                w[idx2] += learning_rate * (y_row[name] - y_prediction[name]) * x_row
-
+                w[:, idx2] += learning_rate * (y_row[name] - y_prediction[name]) * x_row
+                #w[name] = [a + b for a, b in zip(w[name], learning_rate * (y_row[name] - y_prediction[name]) * x_row)]
     return w
 
 
