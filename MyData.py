@@ -47,8 +47,8 @@ def plot_all(w_rules, w_learned, data_df):
         condition = True
         for index, name in enumerate(get_feature_names('y', num_y)):
 
-            if len(binary_string) < index:
-                value = binary_string[len(binary_string) - index-1]
+            if len(binary_string) > index:
+                value = binary_string[len(binary_string)-index-1]
             else:
                 value = 0
 
