@@ -7,8 +7,9 @@ import colorsys
 import math
 
 num_x = 2
-num_y = 3
-num_examples = 200
+num_y = 2
+num_examples = 400
+w_rules = np.random.randn(num_x, num_y)*2
 
 
 # automatic feature generation names, i.e. x1, x2... or y1, y2...
@@ -19,14 +20,6 @@ def get_feature_names(first_char, num):
         x_names.append(first_char + str(i))
 
     return x_names
-
-
-# nested array  where each element is a weight vector.
-#w_rules = {}
-#for name in get_feature_names('y', num_y):
-#    w_rules[name] = np.random.randn(num_x, 1)*2
-
-w_rules = np.random.randn(num_x, num_y)*2
 
 
 def get_w_rules():
@@ -41,41 +34,34 @@ def get_plot_data(w, df):
     return x1_line, x2_line
 
 
+# gets a binary string of certain length num_y, with a number.
+def get_binary_string(number):
+    binary_string = bin(number).replace('0b', '')
+
+    zeros = ''
+    for i in range(num_y - len(binary_string)):
+        zeros += '0'
+
+    return zeros + binary_string
+
+
 def plot_all(w_rules, w_learned, data_df):
 
-    #for i in :
+    for i in range(len(w_rules[0, :])):
 
-
-    (x1_line_rule0, x2_line_rule0) = get_plot_data(w_rules[:, 0], data_df)
-    (x1_line_rule1, x2_line_rule1) = get_plot_data(w_rules[:, 1], data_df)
-    (x1_line_rule2, x2_line_rule2) = get_plot_data(w_rules[:, 2], data_df)
-
-    (x1_line_learned0, x2_line_learned0) = get_plot_data(w_learned[:, 0], data_df)
-    (x1_line_learned1, x2_line_learned1) = get_plot_data(w_learned[:, 1], data_df)
-    (x1_line_learned2, x2_line_learned2) = get_plot_data(w_learned[:, 2], data_df)
-
-    plt.plot(x1_line_rule0, x2_line_rule0, 'k-',
-             x1_line_rule1, x2_line_rule1, 'k-',
-             x1_line_rule2, x2_line_rule2, 'k-',
-             x1_line_learned0, x2_line_learned0, 'r-',
-             x1_line_learned1, x2_line_learned1, 'r-',
-             x1_line_learned2, x2_line_learned2, 'r-'
-             )
+        (x1_line_rule, x2_line_rule) = get_plot_data(w_rules[:, i], data_df)
+        (x1_line_learned, x2_line_learned) = get_plot_data(w_learned[:, i], data_df)
+        plt.plot(x1_line_rule, x2_line_rule, 'k-',
+                 x1_line_learned, x2_line_learned, 'r-')
 
     n = int(math.pow(2, num_y))
 
     for i in range(n):
-        binary_string = bin(i).replace('0b', '')
+        binary_string = get_binary_string(i)
 
         condition = True
         for index, name in enumerate(get_feature_names('y', num_y)):
-
-            if len(binary_string) > index:
-                value = binary_string[len(binary_string)-index-1]
-            else:
-                value = 0
-
-            condition &= (data_df[name] == int(value))
+            condition &= (data_df[name] == int(binary_string[index]))
 
         my_filter = data_df[condition]
         plt.plot(my_filter['x1'], my_filter['x2'], 's', color=colorsys.hsv_to_rgb(*(i*1.0/n, 0.8, 0.8)))
@@ -119,20 +105,14 @@ def train_perceptron(the_training_data, learning_rate):
 
     w = np.random.randn(num_x, num_y)*2  # init weights
 
-    #w = {}
-    #for name in get_feature_names('y', num_y):
-    #    w[name] = np.random.randn(num_x, 1)*2
-
     for i in range(10):
         for idx1, row in the_training_data.iterrows():
-            #x_row = remove_feature('y', row).tolist()
             x_row = remove_feature('y', row)
             y_row = remove_feature('x', row)
             y_prediction = Series(get_labels(x=x_row, w=w))
 
             for idx2, name in enumerate(get_feature_names('y', num_y)):
                 w[:, idx2] += learning_rate * (y_row[name] - y_prediction[name]) * x_row
-                #w[name] = [a + b for a, b in zip(w[name], learning_rate * (y_row[name] - y_prediction[name]) * x_row)]
     return w
 
 
@@ -144,7 +124,7 @@ def get_error(labels, prediction):
 
 train_data = generate_toy_data(num_x)
 
-w_learned = train_perceptron(train_data, .5)
+w_learned = train_perceptron(train_data, .8)
 
 prediction = DataFrame(get_labels(x=train_data.as_matrix(columns=get_feature_names('x', num_x))
                                   , w=w_learned))
