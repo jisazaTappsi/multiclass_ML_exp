@@ -1,10 +1,10 @@
-__author__ = 'juanpabloisaza'
+__author__ = 'juan pablo isaza'
 import copy
 from constants import *
 
 
-# will remove all features starting with first_char, i.e. x1, x2... or y1, y2...
-def remove_feature(first_char, s):
+# will remove all features starting with first_char, i.e. x1, x2... or c1, c2...
+def remove_columns_starting_with(first_char, s):
 
     new_s = copy.deepcopy(s)
 
@@ -31,6 +31,7 @@ def get_labels(x_data, w=get_w_rules()):
     d = {}
     for index, name in enumerate(get_feature_names(c, num_c)):
         d[name] = (np.dot(x_data, w[:, index]) > 1) * 1
+
     return d
 
 

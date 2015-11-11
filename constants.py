@@ -1,11 +1,12 @@
-__author__ = 'juanpabloisaza'
+__author__ = 'juan pablo isaza'
 import numpy as np
 
-num_x = 2
-num_y = 2
-coding_redundancy = 2  # will have a 2 bit redundancy
+num_x = 2  # number of features.
+num_y = 2  # number of classes
+
+ECOC_redundancy = 2  # ECOC (Error	correcting	output	codes) will have a 2 bit redundancy
 num_c = 2
-num_examples = 400
+num_examples = 100
 w_rules = np.random.randn(num_x, num_c)*2
 c = 'c'  # coding character.
 x = 'x'

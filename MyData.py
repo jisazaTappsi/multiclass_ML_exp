@@ -1,10 +1,11 @@
-__author__ = 'juanpabloisaza'
+__author__ = 'juan pablo isaza'
 from pandas import *
 import matplotlib.pyplot as plt
 import colorsys
 import math
 import constants as cts
 import util
+from sympy.combinatorics.graycode import GrayCode
 
 
 # from the w will get the data to plot.
@@ -25,6 +26,7 @@ def get_binary_string(number):
     return zeros + binary_string
 
 
+# plots 2D figure showing data, labels, classifiers and rules used to create the labels.
 def plot_all(w_learned, data_df):
 
     for i in range(len(cts.w_rules[0, :])):
@@ -57,3 +59,13 @@ def generate_toy(num_x):
     df = concat([df, df.apply(lambda row: Series(util.get_labels(row)), axis=1)], axis=1)
 
     return df
+
+
+#def map_classes_to_code(num_y, num_c, ):
+
+#     = list(GrayCode(4).generate_gray())
+
+
+
+
+

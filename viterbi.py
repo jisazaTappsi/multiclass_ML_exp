@@ -1,4 +1,4 @@
-__author__ = 'juanpabloisaza'
+__author__ = 'juan pablo isaza'
 
 
 def viterbi(obs, the_states, start_p, trans_p, emit_p):
